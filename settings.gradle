@@ -1,0 +1,2 @@
+include ':app', ':jcalendarview'
+rootProject.name='JCalendar'
