@@ -14,6 +14,8 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     internal val maxGridWidth = 7
     internal val gridData = Array(maxGirdHeight) { Array<JCalendarViewHolder?>(maxGridWidth) { null } }
 
+    var monthChangeListener: MonthChangeListener? = null
+
     abstract fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup, viewType: Int): ViewHolder
 
     abstract fun onBindViewHolder(holder: ViewHolder, x: Int, y: Int, date: Date)
@@ -43,6 +45,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         calendar.set(Calendar.MONTH, month)
         focusDay = calendar.time
         refresh()
+        monthChangeListener?.monthChanged(this.focusDay)
     }
 
     final fun nextMonth() {
@@ -50,6 +53,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         calendar.add(Calendar.MONTH, 1)
         focusDay = calendar.time
         refresh()
+        monthChangeListener?.monthChanged(this.focusDay)
     }
 
     final fun beforeMonth() {
@@ -57,6 +61,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         calendar.add(Calendar.MONTH, -1)
         focusDay = calendar.time
         refresh()
+        monthChangeListener?.monthChanged(this.focusDay)
     }
 
     fun notifyMonthChanged() {
@@ -89,6 +94,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
 
     final fun setFocusDate(date: Date) {
         this.focusDay = date
+        monthChangeListener?.monthChanged(this.focusDay)
     }
 
     final fun getFocusDate() = this.focusDay

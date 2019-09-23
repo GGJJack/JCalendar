@@ -33,7 +33,7 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
     }
 
     override fun onCreateHeaderView(layoutInflater: LayoutInflater, parent: ViewGroup): SampleHeaderViewHolder {
-        val view = layoutInflater.inflate(R.layout.item_day, parent, false)
+        val view = layoutInflater.inflate(R.layout.item_header, parent, false)
         return SampleHeaderViewHolder(view)
     }
 

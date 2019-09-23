@@ -48,7 +48,7 @@ class JCalendarView : ConstraintLayout {
                     val viewHolder = (if (week == 0) adapter.onCreateHeaderView(layoutInflater, this)
                     else adapter.onCreateView(layoutInflater, this, adapter.getViewType(week, day))) as JCalendarViewHolder
                     if (viewHolder.view.id == View.NO_ID) viewHolder.view.id = makeViewId()
-                    this.addView(viewHolder.view, LayoutParams(ConstraintSet.MATCH_CONSTRAINT, ConstraintSet.MATCH_CONSTRAINT))
+                    this.addView(viewHolder.view, LayoutParams(ConstraintSet.MATCH_CONSTRAINT, if (week == 0) viewHolder.view.layoutParams.height else ConstraintSet.MATCH_CONSTRAINT))
                     adapter.gridData[week][day] = viewHolder
                     viewHolder.view.setOnClickListener { clickViewHolder(day, week, viewHolder) }
                 }
@@ -119,7 +119,7 @@ class JCalendarView : ConstraintLayout {
                     set.connect(view.id, ConstraintSet.TOP, topView.id, ConstraintSet.BOTTOM)
                 }
             }
-            set.constrainDefaultHeight(view.id, ConstraintSet.MATCH_CONSTRAINT_SPREAD)
+            if (y != 0) set.constrainDefaultHeight(view.id, ConstraintSet.MATCH_CONSTRAINT_SPREAD)
             set.constrainDefaultWidth(view.id, ConstraintSet.MATCH_CONSTRAINT)
         }
     }
