@@ -1,18 +1,14 @@
 package com.hstudio.jcalendarview
 
-import android.animation.ObjectAnimator
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import java.util.*
 import android.os.Build
 import android.view.ViewTreeObserver
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.time.milliseconds
 
 
 class JCalendarView : ConstraintLayout {
@@ -30,8 +26,6 @@ class JCalendarView : ConstraintLayout {
     private var _fullHeight = 0
     private var _collapseHeight = 0
 
-    private var lastActiveViewHolder: JCalendarViewHolder? = null
-
     private val sNextGeneratedId = lazy { AtomicInteger(1) }
 
     init {
@@ -43,7 +37,7 @@ class JCalendarView : ConstraintLayout {
         this._adapter?.let { adapter ->
             val layoutInflater = LayoutInflater.from(context)
             // (1(weekTitle) + 7(Week width)) * 6(height Month)
-            for (week in 0 until adapter.maxGirdHeight) {
+            for (week in 0 until adapter.maxGridHeight) {
                 for (day in 0 until adapter.maxGridWidth) {
                     val viewHolder = (if (week == 0) adapter.onCreateHeaderView(layoutInflater, this)
                     else adapter.onCreateView(layoutInflater, this, adapter.getViewType(week, day))) as JCalendarViewHolder
@@ -55,7 +49,7 @@ class JCalendarView : ConstraintLayout {
             }
             val set = ConstraintSet()
             set.clone(this)
-            for (week in 0 until adapter.maxGirdHeight) {
+            for (week in 0 until adapter.maxGridHeight) {
                 for (day in 0 until adapter.maxGridWidth) {
                     magnetViews(day, week, adapter.gridData[week][day]!!, set)
                 }
@@ -66,8 +60,9 @@ class JCalendarView : ConstraintLayout {
     }
 
     fun clickViewHolder(x: Int, y: Int, viewHolder: JCalendarViewHolder) {
-        adapter?._changeFocus(x, y, lastActiveViewHolder, viewHolder)
-        lastActiveViewHolder = viewHolder
+        adapter?.let {
+            it._changeFocus(x, y, viewHolder)
+        }
     }
 
     fun refresh() {
@@ -75,7 +70,7 @@ class JCalendarView : ConstraintLayout {
     }
 
     private fun adapterRefresh() {
-        lastActiveViewHolder?.lostFocusView()
+        adapter?.clearFocus()
     }
 
     private fun adapterChanged(newAdapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>?) {
@@ -107,7 +102,7 @@ class JCalendarView : ConstraintLayout {
                 0 -> {
                     set.connect(view.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
                 }
-                adapter.maxGirdHeight - 1 -> {
+                adapter.maxGridHeight - 1 -> {
                     val topView = adapter.gridData[y - 1][x]!!.view
                     set.connect(view.id, ConstraintSet.TOP, topView.id, ConstraintSet.BOTTOM)
                     set.connect(topView.id, ConstraintSet.BOTTOM, view.id, ConstraintSet.TOP)

@@ -1,5 +1,6 @@
 package com.hstudio.jcalendar
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.icu.util.LocaleData
 import android.view.LayoutInflater
@@ -24,7 +25,7 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
     }
 
     override fun onBindViewHolder(holder: SampleViewHolder, x: Int, y: Int, date: Date) {
-        calendar.time = getFocusDate()
+        calendar.time = getTargetDate()
         val displayMonth = calendar.get(Calendar.MONTH)
         calendar.time = date
         val nowMonth = calendar.get(Calendar.MONTH)
@@ -43,9 +44,12 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
     }
 
     class SampleViewHolder(private val rootView: View) : JCalendarViewHolder(rootView) {
+        private var refresh = 0
+        @SuppressLint("SetTextI18n")
         fun bind(day: String, isThisMonth: Boolean, dayOfWeek: Int) {
             rootView.findViewById<TextView>(R.id.tv_day)?.let {
-                it.text = day
+                val refMessage = if(refresh > 0) " (${refresh})" else ""
+                it.text = "$day$refMessage"
                 it.alpha = if (isThisMonth) 1f else 0.4f
                 it.setTextColor(
                     when (dayOfWeek) {
@@ -54,6 +58,7 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
                         else -> Color.BLACK
                     }
                 )
+                refresh++
             }
         }
 
@@ -67,9 +72,12 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
     }
 
     class SampleHeaderViewHolder(private val rootView: View) : JCalendarViewHolder(rootView) {
+        private var refresh = 0
+        @SuppressLint("SetTextI18n")
         fun bind(weekString: String, dayOfWeek: Int) {
             rootView.findViewById<TextView>(R.id.tv_day)?.let {
-                it.text = weekString
+                val refMessage = if(refresh > 0) " (${refresh})" else ""
+                it.text = "$weekString$refMessage"
                 it.setTextColor(
                     when (dayOfWeek) {
                         Calendar.SUNDAY -> Color.RED
@@ -77,6 +85,7 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
                         else -> Color.BLACK
                     }
                 )
+                refresh++
             }
         }
     }
