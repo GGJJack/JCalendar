@@ -30,7 +30,7 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
         calendar.time = date
         val nowMonth = calendar.get(Calendar.MONTH)
         val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
-        holder.bind(calendar.get(Calendar.DAY_OF_MONTH).toString(), displayMonth == nowMonth, dayOfWeek)
+        holder.bind(calendar.get(Calendar.DAY_OF_MONTH).toString(), displayMonth == nowMonth, dayOfWeek, date)
     }
 
     override fun onCreateHeaderView(layoutInflater: LayoutInflater, parent: ViewGroup): SampleHeaderViewHolder {
@@ -45,8 +45,12 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
 
     class SampleViewHolder(private val rootView: View) : JCalendarViewHolder(rootView) {
         private var refresh = 0
+        private var myDay: Date? = null
+        private var dayString: String? = null
         @SuppressLint("SetTextI18n")
-        fun bind(day: String, isThisMonth: Boolean, dayOfWeek: Int) {
+        fun bind(day: String, isThisMonth: Boolean, dayOfWeek: Int, myDay: Date) {
+            this.myDay = myDay
+            this.dayString = day
             rootView.findViewById<TextView>(R.id.tv_day)?.let {
                 val refMessage = if(refresh > 0) " (${refresh})" else ""
                 it.text = "$day$refMessage"
@@ -58,11 +62,12 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
                         else -> Color.BLACK
                     }
                 )
-                refresh++
+//                refresh++
             }
         }
 
         override fun hasFocusView() {
+            JLog.i("HJ", "Click[${this.dayString}] : ${myDay?.toLocaleString()} / height : ${rootView.height} / measured : ${rootView.measuredHeight}")
             rootView.setBackgroundColor(Color.parseColor("#90CAF9"))
         }
 
@@ -85,7 +90,7 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
                         else -> Color.BLACK
                     }
                 )
-                refresh++
+//                refresh++
             }
         }
     }

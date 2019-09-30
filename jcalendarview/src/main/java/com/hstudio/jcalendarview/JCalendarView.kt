@@ -6,9 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import android.os.Build
 import android.view.ViewTreeObserver
-import java.util.concurrent.atomic.AtomicInteger
+import android.animation.ValueAnimator
+import android.graphics.Color
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import com.hstudio.jcalendarview.JCalendarViewHolder
+import java.util.*
 
 
 class JCalendarView : ConstraintLayout {
@@ -25,8 +28,11 @@ class JCalendarView : ConstraintLayout {
         }
     private var _fullHeight = 0
     private var _collapseHeight = 0
-
-    private val sNextGeneratedId = lazy { AtomicInteger(1) }
+    internal var animateDuration: Int = 300
+    private var isTurnOnAnimateMode = false
+    private var headerHeight: Int? = null
+    private var cellHeight: Int? = null
+    internal var collapseRatio: Float = 0.6f
 
     init {
         inflateViews()
@@ -41,8 +47,11 @@ class JCalendarView : ConstraintLayout {
                 for (day in 0 until adapter.maxGridWidth) {
                     val viewHolder = (if (week == 0) adapter.onCreateHeaderView(layoutInflater, this)
                     else adapter.onCreateView(layoutInflater, this, adapter.getViewType(week, day))) as JCalendarViewHolder
-                    if (viewHolder.view.id == View.NO_ID) viewHolder.view.id = makeViewId()
-                    this.addView(viewHolder.view, LayoutParams(ConstraintSet.MATCH_CONSTRAINT, if (week == 0) viewHolder.view.layoutParams.height else ConstraintSet.MATCH_CONSTRAINT))
+                    if (viewHolder.view.id == View.NO_ID) viewHolder.view.id = Util.makeViewId()
+                    this.addView(
+                        viewHolder.view,
+                        LayoutParams(ConstraintSet.MATCH_CONSTRAINT, if (week == 0) viewHolder.view.layoutParams.height else ConstraintSet.MATCH_CONSTRAINT)
+                    )
                     adapter.gridData[week][day] = viewHolder
                     viewHolder.view.setOnClickListener { clickViewHolder(day, week, viewHolder) }
                 }
@@ -114,38 +123,21 @@ class JCalendarView : ConstraintLayout {
                     set.connect(view.id, ConstraintSet.TOP, topView.id, ConstraintSet.BOTTOM)
                 }
             }
-            if (y != 0) set.constrainDefaultHeight(view.id, ConstraintSet.MATCH_CONSTRAINT_SPREAD)
+            //if (y != 0) set.constrainDefaultHeight(view.id, ConstraintSet.MATCH_CONSTRAINT_SPREAD)
             set.constrainDefaultWidth(view.id, ConstraintSet.MATCH_CONSTRAINT)
-        }
-    }
-
-    private fun makeViewId(): Int {
-        if (Build.VERSION.SDK_INT < 17) {
-            while (true) {
-                val result = sNextGeneratedId.value.get()
-                // aapt-generated IDs have the high byte nonzero; clamp to the range under that.
-                var newValue = result + 1
-                if (newValue > 0x00FFFFFF)
-                    newValue = 1 // Roll over to 1, not 0.
-                if (sNextGeneratedId.value.compareAndSet(result, newValue)) {
-                    return result
-                }
-            }
-        } else {
-            return View.generateViewId()
         }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        JLog.i("HJ", "width : $w, height : $h")
+        //JLog.i("HJ", "width : $w, height : $h")
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         this.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
-                JLog.i("HJ", "width : $width, height : $height")
+                //JLog.i("HJ", "width : $width, height : $height")
                 calculateHeights(height)
                 this@JCalendarView.viewTreeObserver.removeOnGlobalLayoutListener(this)
             }
@@ -154,26 +146,83 @@ class JCalendarView : ConstraintLayout {
 
     private fun calculateHeights(fullHeight: Int) {
         _fullHeight = fullHeight
-        _collapseHeight = fullHeight / 3
+        _collapseHeight = fullHeight - fullHeight / 3
     }
 
     fun setVisibleType(visibleType: VisibleType) {
         this.visibleType = visibleType
     }
 
-    fun startVisibleTypeAnimate(visibleType: VisibleType) {
+    var lastRatio = 1f
 
+    fun onStartAnimation(fromRatio: Float, toRatio: Float) {
+        JLog.i("HJ", "from : $fromRatio, toRatio : $toRatio")
+        if (lastRatio <= 0f) {
+            adapter?.let { adapter ->
+                val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(Date())?.second ?: return
+                for (week in 1 until adapter.maxGridHeight) {
+                    if (week != targetWeek) {
+                        for (day in 0 until adapter.maxGridWidth) {
+                            adapter.gridData[week][day]?.let { viewHolder ->
+                                viewHolder.view.visibility = View.VISIBLE
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    fun minimize() {
+    fun onFinishAnimation(fromRatio: Float, toRatio: Float) {
+        JLog.i("HJ", "from : $fromRatio, toRatio : $toRatio")
+        adapter?.let { adapter ->
+            val cellHeight = this.cellHeight ?: return
+            val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(Date())?.second ?: return
+            for (week in 1 until adapter.maxGridHeight) {
+                for (day in 0 until adapter.maxGridWidth) {
+                    adapter.gridData[week][day]?.let { viewHolder ->
+                        if (week != targetWeek) {
+                            if (toRatio <= 0f) {
+                                viewHolder.view.visibility = View.GONE
+                            } else {
+                                Util.setViewHeight(viewHolder.view, (cellHeight.toFloat() * toRatio).toInt())
+                            }
+                        } else {
+                            val targetHeight = if (collapseRatio > toRatio) collapseRatio else toRatio
+                            Util.setViewHeight(viewHolder.view, (cellHeight.toFloat() * targetHeight).toInt())
+                        }
+                    }
+                }
+            }
+        }
+        lastRatio = toRatio
     }
 
-    fun collapse() {
-
+    fun animateViewHeight(animateRatio: Float) {
+        JLog.i("HJ", "Animating : $animateRatio")
+        val cellHeight = this.cellHeight ?: return
+        adapter?.let { adapter ->
+            val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(Date())?.second ?: return
+            for (week in 1 until adapter.maxGridHeight) {
+                if (animateRatio >= collapseRatio || (animateRatio < collapseRatio && week != targetWeek)) {
+                    for (day in 0 until adapter.maxGridWidth) {
+                        adapter.gridData[week][day]?.let { viewHolder ->
+                            Util.setViewHeight(viewHolder.view, (cellHeight.toFloat() * animateRatio).toInt())
+                        }
+                    }
+                }
+            }
+        }
+        lastRatio = animateRatio
     }
 
-    fun expand() {
-
+    fun getHeaderViewHeight(): Int? {
+        if (headerHeight == null) headerHeight = adapter?.gridData?.get(0)?.get(0)?.view?.height
+        return headerHeight
     }
 
+    fun getFirstRowHeight(): Int? {
+        if (cellHeight == null) cellHeight = adapter?.gridData?.get(1)?.get(0)?.view?.height
+        return cellHeight
+    }
 }

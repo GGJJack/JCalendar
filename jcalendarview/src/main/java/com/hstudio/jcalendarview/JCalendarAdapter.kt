@@ -16,6 +16,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     var monthChangeListener: MonthChangeListener? = null
     internal var lastActiveViewHolder: JCalendarViewHolder? = null
     internal var lastFocusPosition: Pair<Int, Int>? = null
+    internal var holderMaxHeight: Int? = null
 
     abstract fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup, viewType: Int): ViewHolder
 
@@ -83,7 +84,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     final fun notifyXYItemChanged(x: Int, y: Int): Boolean {
         val viewHolder = getViewHolder(x, y)
         viewHolder?.let { holder ->
-            if(y == 0) {
+            if (y == 0) {
                 val calendar = getCalendar(targetDate)
                 calendar.set(Calendar.DAY_OF_WEEK, startOfWeek)
                 calendar.add(Calendar.DAY_OF_MONTH, x)
@@ -157,8 +158,20 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         if (last.first >= maxGridWidth && last.second >= maxGridHeight) return
         val overflow = last.first + 1 >= maxGridWidth
         val nextX = if (overflow) 0 else last.first + 1
-        val nextY = if(overflow) last.second + 1 else last.second
+        val nextY = if (overflow) last.second + 1 else last.second
         _changeFocus(nextX, nextY)
+    }
+
+    final fun focusStartDay() {
+        val calendar = getCalendar()
+        calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        setFocusDay(calendar.time)
+    }
+
+    final fun focusEndDay() {
+        val calendar = getCalendar()
+        calendar.getActualMinimum(Calendar.DAY_OF_MONTH)
+        setFocusDay(calendar.time)
     }
 
     final fun focusPreviewDay() {
@@ -170,7 +183,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         if (last.first <= 0 && last.second <= 1) return
         val overflow = last.first - 1 < 0
         val nextX = if (overflow) maxGridWidth - 1 else last.first - 1
-        val nextY = if(overflow) last.second - 1 else last.second
+        val nextY = if (overflow) last.second - 1 else last.second
         _changeFocus(nextX, nextY)
 
     }
@@ -191,12 +204,16 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         return if (point == null) null else getViewHolder(point.first, point.second)
     }
 
+    @Suppress("SENSELESS_COMPARISON")
     private fun refresh() {
+        if (gridData == null) return
         val calendar = getCalendar(targetDate)
         calendar.set(Calendar.DAY_OF_MONTH, 1)
         val startDay = calendar.get(Calendar.DAY_OF_WEEK) - 1
         for (week in 0 until maxGridHeight) {
+            if (gridData[week] == null) return
             for (day in 0 until maxGridWidth) {
+                if (gridData[week][day] == null) return
                 val viewHolder = gridData[week][day]!!
                 if (week == 0) {
                     calendar.set(Calendar.DAY_OF_WEEK, startOfWeek)

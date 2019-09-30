@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/btn_left"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:text="&lt;"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_date"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/calendar"
+        app:layout_constraintLeft_toRightOf="@+id/btn_left"
+        app:layout_constraintRight_toLeftOf="@+id/btn_right"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_right"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:text="&gt;"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.hstudio.jcalendarview.JCalendar
+        android:id="@+id/calendar"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_minimize"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_left" />
+
+
+    <Button
+        android:id="@+id/btn_minimize"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="minimize"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_preview"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <Button
+        android:id="@+id/btn_collapse"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="collapse"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_preview"
+        app:layout_constraintRight_toLeftOf="@+id/btn_full"
+        app:layout_constraintLeft_toRightOf="@+id/btn_minimize" />
+
+    <Button
+        android:id="@+id/btn_full"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="full"
+        android:textSize="10dp"
+        app:layout_constraintRight_toLeftOf="@+id/btn_test1"
+        app:layout_constraintBottom_toTopOf="@+id/btn_preview"
+        app:layout_constraintLeft_toRightOf="@+id/btn_collapse" />
+
+    <Button
+        android:id="@+id/btn_test1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="test1"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_preview"
+        app:layout_constraintRight_toLeftOf="@+id/btn_test2"
+        app:layout_constraintLeft_toRightOf="@+id/btn_full" />
+
+    <Button
+        android:id="@+id/btn_test2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="test2"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_preview"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/btn_test1" />
+
+    <Button
+        android:id="@+id/btn_preview"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="preview"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <Button
+        android:id="@+id/btn_current"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="current"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/btn_preview"
+        app:layout_constraintRight_toLeftOf="@+id/btn_xy" />
+
+    <Button
+        android:id="@+id/btn_xy"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="1, 1"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/btn_current"
+        app:layout_constraintRight_toLeftOf="@+id/btn_clear" />
+
+    <Button
+        android:id="@+id/btn_clear"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="clear"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/btn_xy"
+        app:layout_constraintRight_toLeftOf="@+id/btn_next" />
+
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="next"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
