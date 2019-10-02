@@ -98,8 +98,9 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     }
 
     final fun notifyDateItemChanged(date: Date): Boolean {
-        val viewHolder = getViewHolder(date)
-        viewHolder?.let { _onBindViewHolder(it, 0, 0, date) }
+        val point = getXYFromDate(date) ?: return false
+        val viewHolder = getViewHolder(point.first, point.second)
+        viewHolder?.let { _onBindViewHolder(it, point.first, point.second, date) }
         return viewHolder != null
     }
 
