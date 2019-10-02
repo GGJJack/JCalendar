@@ -62,12 +62,12 @@ class SampleAdapter : JCalendarAdapter<SampleAdapter.SampleViewHolder, SampleAda
                         else -> Color.BLACK
                     }
                 )
-//                refresh++
+                refresh++
             }
         }
 
         override fun hasFocusView() {
-            JLog.i("HJ", "Click[${this.dayString}] : ${myDay?.toLocaleString()} / height : ${rootView.height} / measured : ${rootView.measuredHeight}")
+//            JLog.i("HJ", "Click[${this.dayString}] : ${myDay?.toLocaleString()} / height : ${rootView.height} / measured : ${rootView.measuredHeight}")
             rootView.setBackgroundColor(Color.parseColor("#90CAF9"))
         }
 

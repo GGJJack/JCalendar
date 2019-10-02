@@ -113,30 +113,39 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     }
 
     final fun getXYFromDate(date: Date): Pair<Int, Int>? {
-        val currentCalendar = getCalendar(targetDate)
-        val targetCalendar = getCalendar(date)
-        currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
-        val startDay = currentCalendar.get(Calendar.DAY_OF_WEEK) - 1
-        currentCalendar.add(Calendar.DAY_OF_MONTH, 0 + (7 * (0)) - startDay)
-        currentCalendar.set(Calendar.HOUR, 0)
-        currentCalendar.set(Calendar.MINUTE, 0)
-        currentCalendar.set(Calendar.SECOND, 0)
-        currentCalendar.set(Calendar.MILLISECOND, 0)
-        val startTime = currentCalendar.time.time
-        currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
-        currentCalendar.add(Calendar.DAY_OF_MONTH, (maxGridWidth - 1) + (7 * ((maxGridHeight))) - startDay)
-        currentCalendar.set(Calendar.HOUR, 23)
-        currentCalendar.set(Calendar.MINUTE, 59)
-        currentCalendar.set(Calendar.SECOND, 59)
-        currentCalendar.set(Calendar.MILLISECOND, 999)
-        val endTime = currentCalendar.time.time
-        val targetTime = targetCalendar.time.time
-        if (targetTime < startTime || endTime < targetTime) return null
-        currentCalendar.time = targetDate
-        currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
-        val diff = daysBetween(currentCalendar.time, targetCalendar.time)
+        val startDate = getCalendar(targetDate).let {
+            it.set(Calendar.DAY_OF_MONTH, 1)
+            val startDay = it.get(Calendar.DAY_OF_WEEK) - 1
+            it.add(Calendar.DAY_OF_MONTH, -startDay)
+            it.time
+        }
+        val diff = daysBetween(startDate, date)
+        JLog.i("HJ", "$diff startDate : ${startDate.toLocaleString()} / endDate : ${date.toLocaleString()}")
+        //val currentCalendar = getCalendar(targetDate)
+        //val targetCalendar = getCalendar(date)
+        //currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
+        //val startDay = currentCalendar.get(Calendar.DAY_OF_WEEK) - 1
+        //currentCalendar.add(Calendar.DAY_OF_MONTH, 0 + (7 * (0)) - startDay)
+        //currentCalendar.set(Calendar.HOUR, 0)
+        //currentCalendar.set(Calendar.MINUTE, 0)
+        //currentCalendar.set(Calendar.SECOND, 0)
+        //currentCalendar.set(Calendar.MILLISECOND, 0)
+        //val startTime = currentCalendar.time.time
+        //currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
+        //currentCalendar.add(Calendar.DAY_OF_MONTH, (maxGridWidth - 1) + (7 * ((maxGridHeight))) - startDay)
+        //currentCalendar.set(Calendar.HOUR, 23)
+        //currentCalendar.set(Calendar.MINUTE, 59)
+        //currentCalendar.set(Calendar.SECOND, 59)
+        //currentCalendar.set(Calendar.MILLISECOND, 999)
+        //val endTime = currentCalendar.time.time
+        //val targetTime = targetCalendar.time.time
+        //if (targetTime < startTime || endTime < targetTime) return null
+        //currentCalendar.time = targetDate
+        //currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
+//        val diff = daysBetween(currentCalendar.time, targetCalendar.time)
         val week = diff / maxGridWidth + 1
         val day = diff % maxGridHeight
+        JLog.i("HJ", "[$day,$week] date[$diff] : ${date.toLocaleString()}")
         return Pair(day.toInt(), week.toInt())
     }
 
@@ -203,7 +212,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     }
 
     final fun getViewHolder(x: Int, y: Int): JCalendarViewHolder? {
-        return if (gridData.size <= y || gridData[y].size <= x) null
+        return if (gridData.size <= y || y < 0 || gridData[y].size <= x || x < 0) null
         else gridData[y][x]
     }
 
@@ -283,10 +292,18 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         eDate.set(Calendar.MILLISECOND, 0)            // set millisecond in second
 
         var daysBetween: Long = 0
-        while (sDate.before(eDate)) {
-            sDate.add(Calendar.DAY_OF_MONTH, 1)
-            daysBetween++
+        if (sDate.after(eDate)) {
+            while (sDate.after(eDate)) {
+                sDate.add(Calendar.DAY_OF_MONTH, -1)
+                daysBetween--
+            }
+        } else {
+            while (sDate.before(eDate)) {
+                sDate.add(Calendar.DAY_OF_MONTH, 1)
+                daysBetween++
+            }
         }
+
         return daysBetween
     }
 }

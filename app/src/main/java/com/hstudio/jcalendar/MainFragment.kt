@@ -64,7 +64,11 @@ class MainFragment : Fragment() {
         }
         view.findViewById<Button>(R.id.btn_test1)?.let {
             it.setOnClickListener {
-                JLog.i("HJ", "Calendar Height : ${calendar.height}")
+                calendar.getFocusDate()?.let {
+                    calendar.notifyDateItemChanged(it)
+                }
+                calendar.focusNextDay()
+//                JLog.i("HJ", "Calendar Height : ${calendar.height}")
             }
         }
         view.findViewById<Button>(R.id.btn_test2)?.let {

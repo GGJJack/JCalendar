@@ -204,6 +204,10 @@ class JCalendar : ConstraintLayout {
 
     final fun getCalendarEndDate(): Date? = pagerAdapter?.currentAdapter()?.getCalendarEndDate()
 
+    final fun focusNextDay() = pagerAdapter?.currentAdapter()?.focusNextDay()
+
+    final fun notifyDateItemChanged(date: Date) = pagerAdapter?.currentAdapter()?.notifyDateItemChanged(date)
+
     fun minimize() {
         pagerAdapter?.setVisibleType(VisibleType.MINIMIZE)
         animateView(0f)
