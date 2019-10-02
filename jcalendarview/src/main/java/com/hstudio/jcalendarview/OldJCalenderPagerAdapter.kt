@@ -23,7 +23,7 @@ import java.util.*
 import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
-internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private val adapterClass: Class<adapter>) : PagerAdapter() {
+internal class OldJCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private val adapterClass: Class<adapter>) : PagerAdapter() {
     internal val maxViewCount = 3
     internal val maxInt = 10 //Int.MAX_VALUE - 1
     internal val centerValue = maxInt / 2
@@ -185,7 +185,7 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
                 lastViewHeightRatio = toFloat
                 JLog.i("HJ", "maxViewHeight : $maxViewHeight, lastViewHeight : $lastViewHeight, lastRatio : $lastViewHeightRatio")
                 val anotherCell = ((cellHeight * (cells - 2)).toFloat() * toFloat).toInt()
-                val targetCell = if(toFloat <= collapseRatio) (cellHeight.toFloat() * collapseRatio).toInt() else (cellHeight.toFloat() * toFloat).toInt()
+                val targetCell = if (toFloat <= collapseRatio) (cellHeight.toFloat() * collapseRatio).toInt() else (cellHeight.toFloat() * toFloat).toInt()
                 val height = maxViewHeight - headerHeight - targetCell - anotherCell
                 viewIdMap.valueIterator().forEach {
                     if (it.second != lastView) {

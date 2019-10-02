@@ -185,8 +185,15 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         val nextX = if (overflow) maxGridWidth - 1 else last.first - 1
         val nextY = if (overflow) last.second - 1 else last.second
         _changeFocus(nextX, nextY)
-
     }
+
+    final fun getFocusDate(): Date? = lastFocusPosition?.let { getDateFromXY(it.first, it.second) }
+
+    final fun getFocusXY(): Pair<Int, Int>? = lastFocusPosition
+
+    final fun getCalendarStartDate(): Date? = getDateFromXY(0, 1)
+
+    final fun getCalendarEndDate(): Date? = getDateFromXY(maxGridWidth - 1, maxGridHeight - 1)
 
     final fun clearFocus() {
         lastActiveViewHolder?.lostFocusView()

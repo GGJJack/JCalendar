@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.hstudio.jcalendarview.JCalendar
+import com.hstudio.jcalendarview.OldJCalendar
 import com.hstudio.jcalendarview.MonthChangeListener
 import java.util.*
 
@@ -63,10 +64,15 @@ class MainFragment : Fragment() {
         }
         view.findViewById<Button>(R.id.btn_test1)?.let {
             it.setOnClickListener {
+                JLog.i("HJ", "Calendar Height : ${calendar.height}")
             }
         }
         view.findViewById<Button>(R.id.btn_test2)?.let {
             it.setOnClickListener {
+                JLog.i(
+                    "HJ",
+                    "Start : ${calendar.getCalendarStartDate()?.toLocaleString()} / End : ${calendar.getCalendarEndDate()?.toLocaleString()} / Focus : ${calendar.getFocusDate()?.toLocaleString()} / XY : ${calendar.getFocusXY()}"
+                )
             }
         }
         return view

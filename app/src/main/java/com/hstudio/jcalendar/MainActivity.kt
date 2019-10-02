@@ -2,12 +2,6 @@ package com.hstudio.jcalendar
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
-import com.hstudio.jcalendarview.JCalendar
-import com.hstudio.jcalendarview.MonthChangeListener
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_main.*
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
 

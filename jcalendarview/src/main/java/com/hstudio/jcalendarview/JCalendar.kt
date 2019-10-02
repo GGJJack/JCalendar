@@ -1,37 +1,99 @@
 package com.hstudio.jcalendarview
 
+import android.animation.Animator
+import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
+import android.view.View
 import android.view.ViewTreeObserver
+import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.util.valueIterator
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import java.util.*
-import kotlin.reflect.KClass
 
-class JCalendar : ViewPager {
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+class JCalendar : ConstraintLayout {
+    constructor(context: Context?) : super(context)
+    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
-    internal var pagerAdapter: JCalenderPagerAdapter<JCalendarAdapter<*, *>>? = null
-    internal var fragmentClass: Class<*>? = null
-    internal var fragmentManager: FragmentManager? = null
+    private val viewPager: ViewPager by lazy { ViewPager(this.context) }
+    private val fragmentLayout: FrameLayout by lazy { FrameLayout(this.context) }
+    private var pagerAdapter: JCalenderPagerAdapter<JCalendarAdapter<*, *>>? = null
+
+    private var _monthChangeListener: MonthChangeListener? = null
+    var monthChangeListener: MonthChangeListener?
+        get() = _monthChangeListener
+        set(value) {
+            _monthChangeListener = value
+        }
 
     init {
-        JLog.i("HJ", "Init")
-        this.viewTreeObserver.addOnGlobalLayoutListener(object: ViewTreeObserver.OnGlobalLayoutListener {
+        if (this.id == View.NO_ID) this.id = Util.makeViewId()
+        viewPager.id = Util.makeViewId()
+        this.addView(viewPager, LayoutParams(ConstraintSet.MATCH_CONSTRAINT, ConstraintSet.MATCH_CONSTRAINT))
+        fragmentLayout.id = Util.makeViewId()
+        this.addView(fragmentLayout, LayoutParams(ConstraintSet.MATCH_CONSTRAINT, ConstraintSet.MATCH_CONSTRAINT))
+
+        val set = ConstraintSet()
+        set.clone(this)
+        set.connect(viewPager.id, ConstraintSet.LEFT, this.id, ConstraintSet.LEFT)
+        set.connect(viewPager.id, ConstraintSet.TOP, this.id, ConstraintSet.TOP)
+        set.connect(viewPager.id, ConstraintSet.RIGHT, this.id, ConstraintSet.RIGHT)
+        set.connect(viewPager.id, ConstraintSet.BOTTOM, fragmentLayout.id, ConstraintSet.TOP)
+        set.connect(fragmentLayout.id, ConstraintSet.TOP, viewPager.id, ConstraintSet.BOTTOM)
+        set.connect(fragmentLayout.id, ConstraintSet.LEFT, this.id, ConstraintSet.LEFT)
+        set.connect(fragmentLayout.id, ConstraintSet.BOTTOM, this.id, ConstraintSet.BOTTOM)
+        set.connect(fragmentLayout.id, ConstraintSet.RIGHT, this.id, ConstraintSet.RIGHT)
+        fragmentLayout.setBackgroundColor(Color.RED)
+        set.applyTo(this)
+        this.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 this@JCalendar.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                pagerAdapter?.let {
-                    it.viewMaxHeight = this@JCalendar.height
-                }
+                viewMaxHeight = this@JCalendar.height
             }
         })
+        fragmentLayout.visibility = View.GONE
     }
 
-    val viewPagerListener: OnPageChangeListener = object : OnPageChangeListener {
+    fun setFragment(supportFragmentManager: FragmentManager, fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(fragmentLayout.id, fragment)
+            .commit()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : JCalendarAdapter<*, *>> calendarAdapter(adapterClass: Class<T>) {
+        JLog.i("HJ", "setAdapter")
+        val adapter = JCalenderPagerAdapter(adapterClass) as JCalenderPagerAdapter<JCalendarAdapter<*, *>>
+        adapter.animateDuration = this.animateDuration
+        pagerAdapter = adapter
+        viewPager.adapter = adapter
+        viewPager.setCurrentItem(adapter.centerValue, false)
+        viewPager.offscreenPageLimit = adapter.maxViewCount
+        adapter.changePosition(adapter.centerValue).let {
+            _monthChangeListener?.monthChanged(it)
+        }
+//        this.fragmentClass?.let {
+//            if (this.fragmentManager != null) pagerAdapter?.setFragmentClass(this.fragmentManager!!, it::class.java)
+//        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        viewPager.addOnPageChangeListener(viewPagerListener)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        viewPager.removeOnPageChangeListener(viewPagerListener)
+    }
+
+    val viewPagerListener: ViewPager.OnPageChangeListener = object : ViewPager.OnPageChangeListener {
         override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
             //JLog.i("HJ", "position : $position / positionOffset : $positionOffset") //애니메이션 되는동안 호출되는듯
         }
@@ -48,76 +110,117 @@ class JCalendar : ViewPager {
             //JLog.i("HJ", "state : $state")
         }
     }
-    private var _monthChangeListener: MonthChangeListener? = null
-    var monthChangeListener: MonthChangeListener?
-        get() = _monthChangeListener
-        set(value) {
-            _monthChangeListener = value
-        }
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        this.addOnPageChangeListener(viewPagerListener)
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        this.removeOnPageChangeListener(viewPagerListener)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun <T : JCalendarAdapter<*, *>> calendarAdapter(adapterClass: Class<T>) {
-        JLog.i("HJ", "setAdapter")
-        val adapter = JCalenderPagerAdapter(adapterClass) as JCalenderPagerAdapter<JCalendarAdapter<*, *>>
-        this.adapter = adapter
-        this.pagerAdapter = adapter
-        this.setCurrentItem(adapter.centerValue, false)
-        this.offscreenPageLimit = adapter.maxViewCount
-        adapter.changePosition(this.currentItem).let {
-            _monthChangeListener?.monthChanged(it)
-        }
-        this.fragmentClass?.let {
-            if (this.fragmentManager != null) pagerAdapter?.setFragmentClass(this.fragmentManager!!, it::class.java)
-        }
-    }
-
-    fun <T: Fragment> setChildFragment(fragmentManager: FragmentManager, fragmentClass: Class<T>){
-        this.fragmentClass = fragmentClass
-        this.fragmentManager = fragmentManager
-        pagerAdapter?.let {
-            it.setFragmentClass(fragmentManager, fragmentClass)
-        }
-    }
-
-    fun next(): Boolean {
-        if (adapter != null && this.currentItem < adapter!!.count.plus(-1)) {
-            setCurrentItem(this.currentItem + 1, true)
-            return true
-        }
-        return false
-    }
-
-    fun prev(): Boolean {
-        if (this.currentItem > 0) {
-            setCurrentItem(this.currentItem - 1, true)
-            return true
-        }
-        return false
-    }
 
     fun getDate(): Date? {
         return pagerAdapter?.targetDate
     }
 
+    var animateDuration: Int = 300
+    private var lastViewHeight: Int = 0
+    private var lastViewHeightRatio = 1f
+    private var lastCalendarHeaderViewHeight: Int? = null
+    private var lastCalendarCellViewHeight: Int? = null
+    private var heightAnimator: Animator? = null
+    private var _collapseRatio = 0.6f
+    private var viewMaxHeight: Int? = null
+    var collapseRatio: Float
+        get() = _collapseRatio
+        set(value) {
+            _collapseRatio = value
+            pagerAdapter?.allViews { it.collapseRatio = value }
+        }
+
+    private fun animateView(toFloat: Float) {
+        val maxViewHeight = viewMaxHeight ?: return
+        val calendar = pagerAdapter?.currentCalendar() ?: return
+        val adapter = calendar.adapter ?: return
+        val cells = adapter.maxGridHeight
+        val headerHeight = lastCalendarHeaderViewHeight ?: calendar.getHeaderViewHeight() ?: return
+        val cellHeight = lastCalendarCellViewHeight ?: calendar.getFirstRowHeight() ?: return
+        val beforeLast = lastViewHeightRatio
+        lastCalendarHeaderViewHeight = headerHeight
+        lastCalendarCellViewHeight = cellHeight
+
+        heightAnimator?.cancel()
+        val animator = ValueAnimator.ofFloat(lastViewHeightRatio, toFloat)
+        animator.duration = this.animateDuration.toLong()
+        animator.addUpdateListener {
+            (it.animatedValue as? Float)?.let { animateValue ->
+                val anotherCell = ((cellHeight * (cells - 2)).toFloat() * animateValue).toInt()
+                val targetCell = if (animateValue <= collapseRatio) (cellHeight.toFloat() * collapseRatio).toInt() else (cellHeight.toFloat() * animateValue).toInt()
+                val height = maxViewHeight - headerHeight - targetCell - anotherCell
+                calendar.animateViewHeight(animateValue)
+                Util.setViewHeight(fragmentLayout, if (height <= 0) 1 else height)
+            }
+        }
+        animator.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationRepeat(animation: Animator?) {
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                calendar.onFinishAnimation(beforeLast, toFloat, lastCalendarCellViewHeight)
+                lastViewHeight = (maxViewHeight.toFloat() * toFloat).toInt()
+                lastViewHeightRatio = toFloat
+                val anotherCell = ((cellHeight * (cells - 2)).toFloat() * toFloat).toInt()
+                val targetCell = if (toFloat <= collapseRatio) (cellHeight.toFloat() * collapseRatio).toInt() else (cellHeight.toFloat() * toFloat).toInt()
+                val height = maxViewHeight - headerHeight - targetCell - anotherCell
+                JLog.i("HJ", "maxViewHeight : $maxViewHeight, lastViewHeight : $lastViewHeight, lastRatio : $lastViewHeightRatio")
+                JLog.i("HJ", "Header : $headerHeight, AnotherCell : $anotherCell, TargetCell : $targetCell, Height : $height")
+                Util.setViewHeight(fragmentLayout, height)
+                pagerAdapter?.allViews {
+                    if (it != calendar) {
+                        it.onFinishAnimation(beforeLast, toFloat, lastCalendarCellViewHeight)
+                    }
+                }
+                if (toFloat == 1f) {
+                    fragmentLayout.visibility = View.GONE
+                }
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+            }
+
+            override fun onAnimationStart(animation: Animator?) {
+                if (fragmentLayout.visibility == View.GONE) {
+                    Util.setViewHeight(fragmentLayout, 1)
+                    fragmentLayout.visibility = View.VISIBLE
+                }
+                calendar.onStartAnimation(beforeLast, toFloat)
+                lastViewHeight = (maxViewHeight.toFloat() * toFloat).toInt()
+                lastViewHeightRatio = toFloat
+            }
+        })
+        animator.start()
+        heightAnimator = animator
+    }
+
+    final fun getFocusDate(): Date? = pagerAdapter?.currentAdapter()?.let { it.getFocusDate() }
+
+    final fun getFocusXY(): Pair<Int, Int>? = pagerAdapter?.currentAdapter()?.let { it.getFocusXY() }
+
+    final fun getDateFromXY(x: Int, y: Int): Date? = pagerAdapter?.currentAdapter()?.getDateFromXY(x, y)
+
+    final fun getCalendarStartDate(): Date? = pagerAdapter?.currentAdapter()?.getCalendarStartDate()
+
+    final fun getCalendarEndDate(): Date? = pagerAdapter?.currentAdapter()?.getCalendarEndDate()
+
     fun minimize() {
-        pagerAdapter?.minimize()
+        pagerAdapter?.setVisibleType(VisibleType.MINIMIZE)
+        animateView(0f)
     }
 
     fun collapse() {
-        pagerAdapter?.collapse()
+        pagerAdapter?.setVisibleType(VisibleType.COLLAPSE)
+        animateView(collapseRatio)
     }
 
     fun full() {
-        pagerAdapter?.full()
+        pagerAdapter?.setVisibleType(VisibleType.FULL)
+        animateView(1f)
     }
+
+    fun prev() {}
+
+    fun next() {}
+
 }

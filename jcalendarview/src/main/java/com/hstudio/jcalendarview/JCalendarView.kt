@@ -159,7 +159,7 @@ class JCalendarView : ConstraintLayout {
         JLog.i("HJ", "from : $fromRatio, toRatio : $toRatio")
         if (lastRatio <= 0f) {
             adapter?.let { adapter ->
-                val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(Date())?.second ?: return
+                val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(adapter.targetDate)?.second ?: adapter.getViewHolder(0, 1) ?: return
                 for (week in 1 until adapter.maxGridHeight) {
                     if (week != targetWeek) {
                         for (day in 0 until adapter.maxGridWidth) {
@@ -173,11 +173,12 @@ class JCalendarView : ConstraintLayout {
         }
     }
 
-    fun onFinishAnimation(fromRatio: Float, toRatio: Float) {
-        JLog.i("HJ", "from : $fromRatio, toRatio : $toRatio")
+    fun onFinishAnimation(fromRatio: Float, toRatio: Float, anotherCellHeight: Int? = null) {
         adapter?.let { adapter ->
-            val cellHeight = this.cellHeight ?: return
-            val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(Date())?.second ?: return
+            JLog.i("HJ", "[${adapter.targetDate.toLocaleString()}] from : $fromRatio, toRatio : $toRatio / cellHeight : ${this.cellHeight}")
+            val cellHeight = this.cellHeight ?: anotherCellHeight ?: return
+            val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(adapter.targetDate)?.second ?: adapter.getViewHolder(0, 1) ?: return
+            JLog.i("HJ", "Header Height : ${adapter.gridData[0][0]?.view?.height}")
             for (week in 1 until adapter.maxGridHeight) {
                 for (day in 0 until adapter.maxGridWidth) {
                     adapter.gridData[week][day]?.let { viewHolder ->
@@ -185,10 +186,12 @@ class JCalendarView : ConstraintLayout {
                             if (toRatio <= 0f) {
                                 viewHolder.view.visibility = View.GONE
                             } else {
+                                if (day == 0) JLog.i("HJ", "$week Cell : ${(cellHeight.toFloat() * toRatio).toInt()}")
                                 Util.setViewHeight(viewHolder.view, (cellHeight.toFloat() * toRatio).toInt())
                             }
                         } else {
                             val targetHeight = if (collapseRatio > toRatio) collapseRatio else toRatio
+                            if (day == 0) JLog.i("HJ", "$week Cell : ${(cellHeight.toFloat() * targetHeight).toInt()}")
                             Util.setViewHeight(viewHolder.view, (cellHeight.toFloat() * targetHeight).toInt())
                         }
                     }
@@ -199,10 +202,10 @@ class JCalendarView : ConstraintLayout {
     }
 
     fun animateViewHeight(animateRatio: Float) {
-        JLog.i("HJ", "Animating : $animateRatio")
+        //JLog.i("HJ", "Animating : $animateRatio")
         val cellHeight = this.cellHeight ?: return
         adapter?.let { adapter ->
-            val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(Date())?.second ?: return
+            val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(Date())?.second ?: adapter.getViewHolder(0, 1) ?: return
             for (week in 1 until adapter.maxGridHeight) {
                 if (animateRatio >= collapseRatio || (animateRatio < collapseRatio && week != targetWeek)) {
                     for (day in 0 until adapter.maxGridWidth) {
