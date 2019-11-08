@@ -1,5 +1,6 @@
 package com.hstudio.jcalendarview
 
+import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import java.lang.IllegalArgumentException
@@ -8,7 +9,12 @@ import java.util.*
 abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHolder : JCalendarViewHolder> {
 
     private val startOfWeek: Int = Calendar.SUNDAY
-    internal var targetDate: Date = Date()
+    internal var _targetDate: Date = Date()
+    internal var targetDate: Date
+        get() = _targetDate.clearTime()
+        set(value) {
+            _targetDate = value
+        }
     internal val maxGridHeight = 6 + 1
     internal val maxGridWidth = 7
     internal val gridData = Array(maxGridHeight) { Array<JCalendarViewHolder?>(maxGridWidth) { null } }
@@ -104,7 +110,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         return viewHolder != null
     }
 
-    final fun getDateFromXY(x: Int, y: Int): Date? {
+    final fun getDateFromXY(x: Int, y: Int): Date {
         val calendar = getCalendar(targetDate)
         calendar.set(Calendar.DAY_OF_MONTH, 1)
         val startDay = calendar.get(Calendar.DAY_OF_WEEK) - 1
@@ -120,7 +126,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
             it.time
         }
         val diff = daysBetween(startDate, date)
-        JLog.i("HJ", "$diff startDate : ${startDate.toLocaleString()} / endDate : ${date.toLocaleString()}")
+//        JLog.i("HJ", "$diff startDate : ${startDate.toLocaleString()} / endDate : ${date.toLocaleString()}")
         //val currentCalendar = getCalendar(targetDate)
         //val targetCalendar = getCalendar(date)
         //currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
@@ -145,7 +151,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
 //        val diff = daysBetween(currentCalendar.time, targetCalendar.time)
         val week = diff / maxGridWidth + 1
         val day = diff % maxGridHeight
-        JLog.i("HJ", "[$day,$week] date[$diff] : ${date.toLocaleString()}")
+//        JLog.i("HJ", "[$day,$week] date[$diff] : ${date.toLocaleString()}")
         return Pair(day.toInt(), week.toInt())
     }
 
@@ -280,16 +286,8 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     private fun getCalendar(date: Date) = Calendar.getInstance().apply { this.time = date }
 
     private fun daysBetween(startDate: Date, endDate: Date): Long {
-        val sDate = getCalendar(startDate)
-        sDate.set(Calendar.HOUR_OF_DAY, 0)            // set hour to midnight
-        sDate.set(Calendar.MINUTE, 0)                 // set minute in hour
-        sDate.set(Calendar.SECOND, 0)                 // set second in minute
-        sDate.set(Calendar.MILLISECOND, 0)            // set millisecond in second
-        val eDate = getCalendar(endDate)
-        eDate.set(Calendar.HOUR_OF_DAY, 0)            // set hour to midnight
-        eDate.set(Calendar.MINUTE, 0)                 // set minute in hour
-        eDate.set(Calendar.SECOND, 0)                 // set second in minute
-        eDate.set(Calendar.MILLISECOND, 0)            // set millisecond in second
+        val sDate = startDate.clearTimeToCalendar()
+        val eDate = endDate.clearTimeToCalendar()
 
         var daysBetween: Long = 0
         if (sDate.after(eDate)) {

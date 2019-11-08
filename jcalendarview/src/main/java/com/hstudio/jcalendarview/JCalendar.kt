@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewTreeObserver
@@ -164,8 +165,8 @@ class JCalendar : ConstraintLayout {
                 val anotherCell = ((cellHeight * (cells - 2)).toFloat() * toFloat).toInt()
                 val targetCell = if (toFloat <= collapseRatio) (cellHeight.toFloat() * collapseRatio).toInt() else (cellHeight.toFloat() * toFloat).toInt()
                 val height = maxViewHeight - headerHeight - targetCell - anotherCell
-                JLog.i("HJ", "maxViewHeight : $maxViewHeight, lastViewHeight : $lastViewHeight, lastRatio : $lastViewHeightRatio")
-                JLog.i("HJ", "Header : $headerHeight, AnotherCell : $anotherCell, TargetCell : $targetCell, Height : $height")
+//                JLog.i("HJ", "maxViewHeight : $maxViewHeight, lastViewHeight : $lastViewHeight, lastRatio : $lastViewHeightRatio")
+//                JLog.i("HJ", "Header : $headerHeight, AnotherCell : $anotherCell, TargetCell : $targetCell, Height : $height")
                 Util.setViewHeight(fragmentLayout, height)
                 pagerAdapter?.allViews {
                     if (it != calendar) {
@@ -227,4 +228,7 @@ class JCalendar : ConstraintLayout {
 
     fun next() {}
 
+    fun setLinePaint(field: JCalendarLine, paint: Paint) {
+        pagerAdapter?.setLinePaint(field, paint)
+    }
 }

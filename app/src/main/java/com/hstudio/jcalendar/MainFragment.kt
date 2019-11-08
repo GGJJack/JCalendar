@@ -1,5 +1,7 @@
 package com.hstudio.jcalendar
 
+import android.graphics.Color
+import android.graphics.Paint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +10,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.hstudio.jcalendarview.JCalendar
+import com.hstudio.jcalendarview.JCalendarLine
 import com.hstudio.jcalendarview.OldJCalendar
 import com.hstudio.jcalendarview.MonthChangeListener
 import java.util.*
@@ -79,6 +82,33 @@ class MainFragment : Fragment() {
                 )
             }
         }
+        val redPaint = Paint().apply {
+            this.color = Color.RED
+            this.style = Paint.Style.STROKE
+            this.strokeWidth = 2f
+        }
+        val greenPaint = Paint().apply {
+            this.color = Color.GREEN
+            this.style = Paint.Style.STROKE
+            this.strokeWidth = 4f
+        }
+        val bluePaint = Paint().apply {
+            this.color = Color.BLUE
+            this.style = Paint.Style.STROKE
+            this.strokeWidth = 2f
+        }
+        calendar.setLinePaint(JCalendarLine.HEADER_LEFT, redPaint)
+        calendar.setLinePaint(JCalendarLine.HEADER_TOP, redPaint)
+        calendar.setLinePaint(JCalendarLine.HEADER_RIGHT, redPaint)
+        calendar.setLinePaint(JCalendarLine.HEADER_BOTTOM, redPaint)
+        calendar.setLinePaint(JCalendarLine.HEADER_SPLIT, greenPaint)
+        calendar.setLinePaint(JCalendarLine.BODY_LEFT, greenPaint)
+        calendar.setLinePaint(JCalendarLine.BODY_TOP, greenPaint)
+        calendar.setLinePaint(JCalendarLine.BODY_RIGHT, greenPaint)
+        calendar.setLinePaint(JCalendarLine.BODY_BOTTOM, greenPaint)
+        calendar.setLinePaint(JCalendarLine.BODY_SPLIT_HORIZONTAL, redPaint)
+        calendar.setLinePaint(JCalendarLine.BODY_SPLIT_VERTICAL, bluePaint)
+        calendar.setLinePaint(JCalendarLine.FOCUS_BODY, greenPaint)
         return view
     }
 }

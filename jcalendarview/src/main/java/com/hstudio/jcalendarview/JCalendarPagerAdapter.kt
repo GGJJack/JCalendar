@@ -1,5 +1,6 @@
 package com.hstudio.jcalendarview
 
+import android.graphics.Paint
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
@@ -20,23 +21,29 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
     internal var viewIdMap = SparseArray<JCalendarView>()
     internal var visibleType: VisibleType = VisibleType.FULL
 
+    internal var calendarUnit = Calendar.MONTH
+    private val lineMap = HashMap<JCalendarLine, Paint?>()
+
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         val calendarView = JCalendarView(container.context)
         calendarView.id = Util.makeViewId()
+        calendarView.setLineMap(lineMap)
+        calendarView.setVisibleType(visibleType)
         calendarView.adapter = adapterClass.newInstance().apply {
             val gap = lastPosition - centerValue
             val calendar = Calendar.getInstance()
-            calendar.add(Calendar.MONTH, gap)
+            calendar.add(calendarUnit, gap)
             if (position == lastPosition) {
                 this.setTargetDate(calendar.time)
             } else if (position == lastPosition - 1) {
-                calendar.add(Calendar.MONTH, -1)
+                calendar.add(calendarUnit, -1)
                 this.setTargetDate(calendar.time)
             } else if (position == lastPosition + 1) {
-                calendar.add(Calendar.MONTH, 1)
+                calendar.add(calendarUnit, 1)
                 this.setTargetDate(calendar.time)
             }
         }
+        JLog.e("HJ", "position : $position / Date : ${calendarView.adapter!!.targetDate.toLocaleString()}")
         calendarView.animateDuration = this.animateDuration
         calendarView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         container.addView(calendarView)
@@ -63,19 +70,24 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
         val gap = lastPosition - centerValue
         val calendar = Calendar.getInstance()
         JLog.i("HJ", "[$position]calendar Time($gap) : ${calendar.time.toLocaleString()}")
-        calendar.add(if (isMinimize) Calendar.WEEK_OF_MONTH else Calendar.MONTH, gap)
+        calendar.add(calendarUnit, gap)
         targetDate = calendar.time
         JLog.i("HJ", "\tresult : ${targetDate.toLocaleString()}")
         currentAdapter()?.setTargetDate(targetDate)
         JLog.i("HJ", "toDay(${lastPosition}) : ${targetDate.toLocaleString()}")
-        calendar.add(if (isMinimize) Calendar.WEEK_OF_MONTH else Calendar.MONTH, -1)
+        calendar.add(calendarUnit, -1)
         prevAdapter()?.setTargetDate(calendar.time)
         JLog.i("HJ", "YesterDay(${lastPosition - 1}) : ${calendar.time.toLocaleString()}")
-        calendar.add(if (isMinimize) Calendar.WEEK_OF_MONTH else Calendar.MONTH, 2)
+        calendar.add(calendarUnit, 2)
         JLog.i("HJ", "Tomorrow(${lastPosition + 1}) : ${calendar.time.toLocaleString()}")
         nextAdapter()?.setTargetDate(calendar.time)
         prevAdapter()?.notifyMonthChanged()
         nextAdapter()?.notifyMonthChanged()
+        if (lineMap.isNotEmpty()) {
+            viewIdMap[lastPosition]?.invalidate()
+            viewIdMap[lastPosition - 1]?.invalidate()
+            viewIdMap[lastPosition + 1]?.invalidate()
+        }
 //        val move = position - lastPosition
 //        if (move == 1) {
 //            prevAdapter()?.notifyMonthChanged()
@@ -88,6 +100,7 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
     fun setVisibleType(visibleType: VisibleType) {
         when (visibleType) {
             VisibleType.FULL, VisibleType.COLLAPSE -> {
+                calendarUnit = Calendar.MONTH
                 if (this.visibleType == VisibleType.MINIMIZE) {
                     val gap = lastPosition - centerValue
                     val calendar = Calendar.getInstance()
@@ -95,14 +108,14 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
                     val curDate = calendar.time
                     prevAdapter()?.let {
                         calendar.time = curDate
-                        calendar.add(Calendar.MONTH, -1)
+                        calendar.add(calendarUnit, -1)
                         it.setTargetDate(calendar.time)
                         it.notifyMonthChanged()
                         JLog.i("HJ", "YesterDay(${lastPosition - 1}) : ${calendar.time.toLocaleString()}")
                     }
                     nextAdapter()?.let {
                         calendar.time = curDate
-                        calendar.add(Calendar.MONTH, 1)
+                        calendar.add(calendarUnit, 1)
                         it.setTargetDate(calendar.time)
                         it.notifyMonthChanged()
                         JLog.i("HJ", "Tomorrow(${lastPosition + 1}) : ${calendar.time.toLocaleString()}")
@@ -110,6 +123,7 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
                 }
             }
             VisibleType.MINIMIZE -> {
+                calendarUnit = Calendar.WEEK_OF_MONTH
                 if (this.visibleType != VisibleType.MINIMIZE) {
                     val gap = lastPosition - centerValue
                     val calendar = Calendar.getInstance()
@@ -117,14 +131,14 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
                     val curDate = calendar.time
                     prevAdapter()?.let {
                         calendar.time = curDate
-                        calendar.add(Calendar.WEEK_OF_MONTH, -1)
+                        calendar.add(calendarUnit, -1)
                         it.setTargetDate(calendar.time)
                         it.notifyMonthChanged()
                         JLog.i("HJ", "YesterDay(${lastPosition - 1}) : ${calendar.time.toLocaleString()}")
                     }
                     nextAdapter()?.let {
                         calendar.time = curDate
-                        calendar.add(Calendar.WEEK_OF_MONTH, 1)
+                        calendar.add(calendarUnit, 2)
                         it.setTargetDate(calendar.time)
                         it.notifyMonthChanged()
                         JLog.i("HJ", "Tomorrow(${lastPosition + 1}) : ${calendar.time.toLocaleString()}")
@@ -152,5 +166,10 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
 
     override fun getCount(): Int {
         return maxInt
+    }
+
+    internal fun setLinePaint(field: JCalendarLine, paint: Paint) {
+        lineMap[field] = paint
+        allViews { it.setLinePaint(field, paint) }
     }
 }
