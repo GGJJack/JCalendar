@@ -7,12 +7,8 @@ import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import android.view.ViewTreeObserver
-import android.animation.ValueAnimator
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import com.hstudio.jcalendarview.JCalendarViewHolder
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -87,11 +83,12 @@ class JCalendarView : ConstraintLayout {
         lineMap.iterator().forEach { data ->
             val key = data.key
             data.value?.let { value ->
+                val strokeWidth = value.strokeWidth
                 when (key) {
                     JCalendarLine.HEADER_LEFT -> viewCanvas.drawLine(0f, 0f, 0f, headerViewHeight, value)
                     JCalendarLine.HEADER_TOP -> viewCanvas.drawLine(0f, 0f, width.toFloat(), 0f, value)
-                    JCalendarLine.HEADER_RIGHT -> viewCanvas.drawLine(width.toFloat(), 0f, width.toFloat(), headerViewHeight, value)
-                    JCalendarLine.HEADER_BOTTOM -> viewCanvas.drawLine(0f, headerViewHeight, width.toFloat(), headerViewHeight, value)
+                    JCalendarLine.HEADER_RIGHT -> viewCanvas.drawLine(width.toFloat() - strokeWidth, 0f, width.toFloat() - strokeWidth, headerViewHeight, value)
+                    JCalendarLine.HEADER_BOTTOM -> viewCanvas.drawLine(0f, headerViewHeight - strokeWidth, width.toFloat(), headerViewHeight - strokeWidth, value)
                     JCalendarLine.HEADER_SPLIT -> {
                         this._adapter?.let { adapter ->
                             for (day in 1 until adapter.maxGridWidth) {
@@ -102,8 +99,8 @@ class JCalendarView : ConstraintLayout {
                     }
                     JCalendarLine.BODY_LEFT -> viewCanvas.drawLine(0f, headerViewHeight, 0f, height.toFloat(), value)
                     JCalendarLine.BODY_TOP -> viewCanvas.drawLine(0f, headerViewHeight, width.toFloat(), headerViewHeight, value)
-                    JCalendarLine.BODY_RIGHT -> viewCanvas.drawLine(width.toFloat(), headerViewHeight, width.toFloat(), height.toFloat(), value)
-                    JCalendarLine.BODY_BOTTOM -> viewCanvas.drawLine(0f, height.toFloat(), width.toFloat(), height.toFloat(), value)
+                    JCalendarLine.BODY_RIGHT -> viewCanvas.drawLine(width.toFloat() - strokeWidth, headerViewHeight, width.toFloat() - strokeWidth, height.toFloat(), value)
+                    JCalendarLine.BODY_BOTTOM -> viewCanvas.drawLine(0f, height.toFloat() - strokeWidth, width.toFloat(), height.toFloat() - strokeWidth, value)
                     JCalendarLine.BODY_SPLIT_HORIZONTAL -> {
                         this._adapter?.let { adapter ->
                             for (week in 1 until adapter.maxGridHeight) {
@@ -170,6 +167,10 @@ class JCalendarView : ConstraintLayout {
         adapter?.clearFocus()
     }
 
+    private fun invalidViews() {
+        this.invalidate()
+    }
+
     fun setLinePaint(field: JCalendarLine, paint: Paint) {
         lineMap[field] = paint
         invalidate()
@@ -185,6 +186,7 @@ class JCalendarView : ConstraintLayout {
     private fun adapterChanged(newAdapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>?) {
         this._adapter = newAdapter
         newAdapter?.refreshCallback = this::adapterRefresh
+        newAdapter?.invalidCallback = this::invalidViews
         inflateViews()
     }
 

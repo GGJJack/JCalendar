@@ -22,7 +22,7 @@ class JCalendar : ConstraintLayout {
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
-    private val viewPager: ViewPager by lazy { ViewPager(this.context) }
+    private val viewPager: SwipeViewPager by lazy { SwipeViewPager(this.context) }
     private val fragmentLayout: FrameLayout by lazy { FrameLayout(this.context) }
     private var pagerAdapter: JCalenderPagerAdapter<JCalendarAdapter<*, *>>? = null
 
@@ -50,7 +50,6 @@ class JCalendar : ConstraintLayout {
         set.connect(fragmentLayout.id, ConstraintSet.LEFT, this.id, ConstraintSet.LEFT)
         set.connect(fragmentLayout.id, ConstraintSet.BOTTOM, this.id, ConstraintSet.BOTTOM)
         set.connect(fragmentLayout.id, ConstraintSet.RIGHT, this.id, ConstraintSet.RIGHT)
-        fragmentLayout.setBackgroundColor(Color.RED)
         set.applyTo(this)
         this.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
@@ -72,13 +71,12 @@ class JCalendar : ConstraintLayout {
         JLog.i("HJ", "setAdapter")
         val adapter = JCalenderPagerAdapter(adapterClass) as JCalenderPagerAdapter<JCalendarAdapter<*, *>>
         adapter.animateDuration = this.animateDuration
+        attachListener?.let { adapter.setAdapterAttachedListener(it) }
         pagerAdapter = adapter
         viewPager.adapter = adapter
         viewPager.setCurrentItem(adapter.centerValue, false)
         viewPager.offscreenPageLimit = adapter.maxViewCount
-        adapter.changePosition(adapter.centerValue).let {
-            _monthChangeListener?.monthChanged(it)
-        }
+        adapter.changePosition(adapter.centerValue).let { _monthChangeListener?.monthChanged(it) }
 //        this.fragmentClass?.let {
 //            if (this.fragmentManager != null) pagerAdapter?.setFragmentClass(this.fragmentManager!!, it::class.java)
 //        }
@@ -209,6 +207,10 @@ class JCalendar : ConstraintLayout {
 
     final fun notifyDateItemChanged(date: Date) = pagerAdapter?.currentAdapter()?.notifyDateItemChanged(date)
 
+    fun currentAdapter(): JCalendarAdapter<*, *>? = pagerAdapter?.currentAdapter()
+    fun prevAdapter(): JCalendarAdapter<*, *>? = pagerAdapter?.prevAdapter()
+    fun nextAdapter(): JCalendarAdapter<*, *>? = pagerAdapter?.nextAdapter()
+
     fun minimize() {
         pagerAdapter?.setVisibleType(VisibleType.MINIMIZE)
         animateView(0f)
@@ -224,11 +226,28 @@ class JCalendar : ConstraintLayout {
         animateView(1f)
     }
 
+    fun swipeLock() = viewPager.setSwipe(false)
+
+    fun swipeUnLock() = viewPager.setSwipe(true)
+
     fun prev() {}
 
     fun next() {}
 
+    fun moveToday() {
+        pagerAdapter?.changeCenterPosition(viewPager.currentItem)?.let { _monthChangeListener?.monthChanged(it) }
+    }
+
     fun setLinePaint(field: JCalendarLine, paint: Paint) {
         pagerAdapter?.setLinePaint(field, paint)
+    }
+
+    private var attachListener: AdapterAttachedListener? = null
+
+    fun setAdapterAttachedListener(listener: AdapterAttachedListener) {
+        attachListener = listener
+        pagerAdapter?.let {
+            it.setAdapterAttachedListener(listener)
+        }
     }
 }

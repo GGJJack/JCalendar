@@ -11,8 +11,8 @@ import androidx.viewpager.widget.PagerAdapter
 import java.util.*
 
 internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private val adapterClass: Class<adapter>) : PagerAdapter() {
-    internal val maxInt = 10 //Int.MAX_VALUE - 1
-    internal val centerValue = maxInt / 2
+    internal val maxInt = Int.MAX_VALUE - 1
+    internal var centerValue = maxInt / 2
     internal var targetDate: Date = Date()
     internal val maxViewCount = 3
     internal var animateDuration: Int = 300
@@ -29,10 +29,12 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
         calendarView.id = Util.makeViewId()
         calendarView.setLineMap(lineMap)
         calendarView.setVisibleType(visibleType)
-        calendarView.adapter = adapterClass.newInstance().apply {
+        val calendar = Calendar.getInstance()
+        val targetDate = Calendar.getInstance()
+        val adapter = adapterClass.newInstance().apply {
             val gap = lastPosition - centerValue
-            val calendar = Calendar.getInstance()
             calendar.add(calendarUnit, gap)
+            targetDate.add(calendarUnit, gap)
             if (position == lastPosition) {
                 this.setTargetDate(calendar.time)
             } else if (position == lastPosition - 1) {
@@ -43,16 +45,28 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
                 this.setTargetDate(calendar.time)
             }
         }
+        calendarView.adapter = adapter
         JLog.e("HJ", "position : $position / Date : ${calendarView.adapter!!.targetDate.toLocaleString()}")
         calendarView.animateDuration = this.animateDuration
         calendarView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         container.addView(calendarView)
         viewIdMap.put(position, calendarView)
+        attachListener?.let {
+            if (lastPosition - 1 <= position && position <= lastPosition + 1) it.adapterAttached(calendar.time, targetDate.time, adapter)
+        }
         return calendarView
     }
 
     fun currentAdapter(): adapter? {
-        return viewIdMap[lastPosition]?.adapter as? adapter
+        val adapter = viewIdMap[lastPosition]?.adapter as? adapter
+        adapter?.setOnClearFocus {
+            if (lineMap.isNotEmpty()) {
+                viewIdMap[lastPosition]?.invalidate()
+                viewIdMap[lastPosition - 1]?.invalidate()
+                viewIdMap[lastPosition + 1]?.invalidate()
+            }
+        }
+        return adapter
     }
 
     fun prevAdapter(): adapter? {
@@ -95,6 +109,13 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
 //            nextAdapter()?.notifyMonthChanged()
 //        }
         return targetDate
+    }
+
+    fun changeCenterPosition(position: Int): Date {
+        centerValue = position
+        val date = changePosition(position)
+        currentAdapter()?.notifyMonthChanged()
+        return date
     }
 
     fun setVisibleType(visibleType: VisibleType) {
@@ -171,5 +192,11 @@ internal class JCalenderPagerAdapter<adapter : JCalendarAdapter<*, *>>(private v
     internal fun setLinePaint(field: JCalendarLine, paint: Paint) {
         lineMap[field] = paint
         allViews { it.setLinePaint(field, paint) }
+    }
+
+    var attachListener: AdapterAttachedListener? = null
+
+    fun setAdapterAttachedListener(listener: AdapterAttachedListener) {
+        attachListener = listener
     }
 }

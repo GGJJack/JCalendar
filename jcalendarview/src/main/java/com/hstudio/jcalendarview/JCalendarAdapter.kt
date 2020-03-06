@@ -1,6 +1,5 @@
 package com.hstudio.jcalendarview
 
-import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import java.lang.IllegalArgumentException
@@ -126,32 +125,8 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
             it.time
         }
         val diff = daysBetween(startDate, date)
-//        JLog.i("HJ", "$diff startDate : ${startDate.toLocaleString()} / endDate : ${date.toLocaleString()}")
-        //val currentCalendar = getCalendar(targetDate)
-        //val targetCalendar = getCalendar(date)
-        //currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
-        //val startDay = currentCalendar.get(Calendar.DAY_OF_WEEK) - 1
-        //currentCalendar.add(Calendar.DAY_OF_MONTH, 0 + (7 * (0)) - startDay)
-        //currentCalendar.set(Calendar.HOUR, 0)
-        //currentCalendar.set(Calendar.MINUTE, 0)
-        //currentCalendar.set(Calendar.SECOND, 0)
-        //currentCalendar.set(Calendar.MILLISECOND, 0)
-        //val startTime = currentCalendar.time.time
-        //currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
-        //currentCalendar.add(Calendar.DAY_OF_MONTH, (maxGridWidth - 1) + (7 * ((maxGridHeight))) - startDay)
-        //currentCalendar.set(Calendar.HOUR, 23)
-        //currentCalendar.set(Calendar.MINUTE, 59)
-        //currentCalendar.set(Calendar.SECOND, 59)
-        //currentCalendar.set(Calendar.MILLISECOND, 999)
-        //val endTime = currentCalendar.time.time
-        //val targetTime = targetCalendar.time.time
-        //if (targetTime < startTime || endTime < targetTime) return null
-        //currentCalendar.time = targetDate
-        //currentCalendar.set(Calendar.DAY_OF_MONTH, 1)
-//        val diff = daysBetween(currentCalendar.time, targetCalendar.time)
         val week = diff / maxGridWidth + 1
         val day = diff % maxGridHeight
-//        JLog.i("HJ", "[$day,$week] date[$diff] : ${date.toLocaleString()}")
         return Pair(day.toInt(), week.toInt())
     }
 
@@ -166,10 +141,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     }
 
     final fun focusNextDay() {
-        if (lastFocusPosition == null) {
-            _changeFocus(0, 1)
-            return
-        }
+        if (lastFocusPosition == null) { _changeFocus(0, 1); return }
         val last = lastFocusPosition!!
         if (last.first >= maxGridWidth && last.second >= maxGridHeight) return
         val overflow = last.first + 1 >= maxGridWidth
@@ -182,6 +154,17 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         val calendar = getCalendar()
         calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
         setFocusDay(calendar.time)
+    }
+
+    final fun focusMonthStartDay() {
+        val cal = Calendar.getInstance()
+        for (x in 0 until 7) {
+            cal.time = getDateFromXY(x, 1)
+            if (cal.get(Calendar.DAY_OF_MONTH) == 1) {
+                _changeFocus(x, 1)
+                return
+            }
+        }
     }
 
     final fun focusEndDay() {
@@ -215,6 +198,13 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         lastActiveViewHolder?.lostFocusView()
         lastActiveViewHolder = null
         lastFocusPosition = null
+        onClearFocus?.let { it() }
+    }
+
+    private var onClearFocus: (() -> Unit)? = null
+
+    fun setOnClearFocus(func: (() -> Unit)) {
+        onClearFocus = func
     }
 
     final fun getViewHolder(x: Int, y: Int): JCalendarViewHolder? {
@@ -255,6 +245,8 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
 
     internal var refreshCallback: (() -> Unit)? = null
 
+    internal var invalidCallback: (() -> Unit)? = null
+
     final fun setTargetDate(date: Date) {
         this.targetDate = date
         monthChangeListener?.monthChanged(this.targetDate)
@@ -263,9 +255,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     final fun getTargetDate() = this.targetDate
 
     internal fun _changeFocus(x: Int, y: Int) {
-        getViewHolder(x, y)?.let { focus ->
-            _changeFocus(x, y, focus)
-        }
+        getViewHolder(x, y)?.let { focus -> _changeFocus(x, y, focus) }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -277,6 +267,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         changeFocus(x, y, before, current)
         lastActiveViewHolder = current
         lastFocusPosition = Pair(x, y)
+        invalidCallback?.let { it() }
     }
 
     fun changeFocus(x: Int, y: Int, beforeViewHolder: ViewHolder?, currentViewHolder: ViewHolder) {
