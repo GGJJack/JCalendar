@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.hstudio.jcalendarview.JCalendarLine
 import com.hstudio.jcalendarview.JCalendarView
+import com.hstudio.jcalendarview.JCalendarViewHolder
 import com.hstudio.jcalendarview.MonthChangeListener
 import kotlinx.android.synthetic.main.fragment_main.*
 import java.text.SimpleDateFormat

@@ -47,8 +47,25 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
 
     final fun getDate() = targetDate
 
+    final fun setYear(year: Int) {
+        val calendar = getCalendar(targetDate)
+        calendar.set(Calendar.YEAR, year)
+        targetDate = calendar.time
+        refresh()
+        monthChangeListener?.monthChanged(this.targetDate)
+    }
+
     final fun setMonth(month: Int) {
         val calendar = getCalendar(targetDate)
+        calendar.set(Calendar.MONTH, month)
+        targetDate = calendar.time
+        refresh()
+        monthChangeListener?.monthChanged(this.targetDate)
+    }
+
+    final fun setYearAndMonth(year: Int, month: Int) {
+        val calendar = getCalendar(targetDate)
+        calendar.set(Calendar.YEAR, year)
         calendar.set(Calendar.MONTH, month)
         targetDate = calendar.time
         refresh()
