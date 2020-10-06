@@ -4,7 +4,7 @@ import android.os.Build
 import android.view.View
 import java.util.*
 
-abstract class JCalendarViewHolder(private val _rootView: View): AnimateAbleViewInterface {
+abstract class JCalendarViewHolder(private val _rootView: View) {
     var viewType: Int = 0
 
     val view: View get() = _rootView
@@ -16,12 +16,6 @@ abstract class JCalendarViewHolder(private val _rootView: View): AnimateAbleView
             _rootView.focusable = View.FOCUSABLE
         }
     }
-
-    override fun startAnimate(){}
-
-    override fun animating(){}
-
-    override fun finishAnimate(){}
 
     open fun hasFocusView(){}
 

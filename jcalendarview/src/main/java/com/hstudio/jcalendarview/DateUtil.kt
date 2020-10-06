@@ -81,6 +81,5 @@ fun Date.thisWeek(date: Date): Boolean {
         this.add(Calendar.DAY_OF_MONTH, 7)
     }.get(Calendar.DAY_OF_MONTH)
     val target = date.toCalendar().get(Calendar.DAY_OF_MONTH)
-    JLog.w("HJ", "${this.toLocaleString()} == ${date.toLocaleString()} : ${this.equalYM(date)} && ${start <= target} && ${target <= end}")
     return this.equalYM(date) && start <= target && target <= end
 }

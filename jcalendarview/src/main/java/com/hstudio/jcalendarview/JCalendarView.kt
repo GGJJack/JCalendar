@@ -14,11 +14,10 @@ import kotlin.collections.HashMap
 
 
 class JCalendarView : ConstraintLayout {
-    constructor(context: Context?) : super(context)
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
-    private var visibleType: VisibleType = VisibleType.FULL
     private var _adapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>? = null
     var adapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>?
         get() = _adapter
@@ -57,11 +56,7 @@ class JCalendarView : ConstraintLayout {
                         clickViewHolder(day, week, viewHolder)
                         if (lineMap.containsKey(JCalendarLine.FOCUS_BODY)) invalidate()
                     }
-                    if (visibleType == VisibleType.MINIMIZE) {
-                        viewHolder.view.visibility = if (adapter.targetDate.thisWeek(adapter.getDateFromXY(day, week)) || week == 0) View.VISIBLE else View.GONE
-                    } else {
-                        viewHolder.view.visibility = View.VISIBLE
-                    }
+                    viewHolder.view.visibility = View.VISIBLE
                 }
             }
             val set = ConstraintSet()
@@ -249,76 +244,6 @@ class JCalendarView : ConstraintLayout {
     private fun calculateHeights(fullHeight: Int) {
         _fullHeight = fullHeight
         _collapseHeight = fullHeight - fullHeight / 3
-    }
-
-    fun setVisibleType(visibleType: VisibleType) {
-        this.visibleType = visibleType
-    }
-
-    var lastRatio = 1f
-
-    fun onStartAnimation(fromRatio: Float, toRatio: Float) {
-//        JLog.i("HJ", "from : $fromRatio, toRatio : $toRatio")
-        if (lastRatio <= 0f) {
-            adapter?.let { adapter ->
-                val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(adapter.targetDate)?.second ?: adapter.getViewHolder(0, 1) ?: return
-                for (week in 1 until adapter.maxGridHeight) {
-                    if (week != targetWeek) {
-                        for (day in 0 until adapter.maxGridWidth) {
-                            adapter.gridData[week][day]?.let { viewHolder ->
-                                viewHolder.view.visibility = View.VISIBLE
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    fun onFinishAnimation(fromRatio: Float, toRatio: Float, anotherCellHeight: Int? = null) {
-        adapter?.let { adapter ->
-            //            JLog.i("HJ", "[${adapter.targetDate.toLocaleString()}] from : $fromRatio, toRatio : $toRatio / cellHeight : ${this.cellHeight}")
-            val cellHeight = this.cellHeight ?: anotherCellHeight ?: return
-            val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(adapter.targetDate)?.second ?: adapter.getViewHolder(0, 1) ?: return
-//            JLog.i("HJ", "Header Height : ${adapter.gridData[0][0]?.view?.height}")
-            for (week in 1 until adapter.maxGridHeight) {
-                for (day in 0 until adapter.maxGridWidth) {
-                    adapter.gridData[week][day]?.let { viewHolder ->
-                        if (week != targetWeek) {
-                            if (toRatio <= 0f) {
-                                viewHolder.view.visibility = View.GONE
-                            } else {
-//                                if (day == 0) JLog.i("HJ", "$week Cell : ${(cellHeight.toFloat() * toRatio).toInt()}")
-                                Util.setViewHeight(viewHolder.view, (cellHeight.toFloat() * toRatio).toInt())
-                            }
-                        } else {
-                            val targetHeight = if (collapseRatio > toRatio) collapseRatio else toRatio
-//                            if (day == 0) JLog.i("HJ", "$week Cell : ${(cellHeight.toFloat() * targetHeight).toInt()}")
-                            Util.setViewHeight(viewHolder.view, (cellHeight.toFloat() * targetHeight).toInt())
-                        }
-                    }
-                }
-            }
-        }
-        lastRatio = toRatio
-    }
-
-    fun animateViewHeight(animateRatio: Float) {
-        //JLog.i("HJ", "Animating : $animateRatio")
-        val cellHeight = this.cellHeight ?: return
-        adapter?.let { adapter ->
-            val targetWeek = adapter.lastFocusPosition?.second ?: adapter.getXYFromDate(Date())?.second ?: adapter.getViewHolder(0, 1) ?: return
-            for (week in 1 until adapter.maxGridHeight) {
-                if (animateRatio >= collapseRatio || (animateRatio < collapseRatio && week != targetWeek)) {
-                    for (day in 0 until adapter.maxGridWidth) {
-                        adapter.gridData[week][day]?.let { viewHolder ->
-                            Util.setViewHeight(viewHolder.view, (cellHeight.toFloat() * animateRatio).toInt())
-                        }
-                    }
-                }
-            }
-        }
-        lastRatio = animateRatio
     }
 
     fun getHeaderViewHeight(): Int? {
