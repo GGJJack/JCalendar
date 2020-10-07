@@ -249,7 +249,7 @@ class JCalendarView : ConstraintLayout {
     }
     
     fun setAdapter(adapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>) {
-        this.adapter = adapter
+        adapterChanged(adapter)
     }
     
     fun getAdapter(): JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>? = this.adapter

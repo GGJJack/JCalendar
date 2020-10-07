@@ -24,13 +24,13 @@ class MainFragment : Fragment() {
         val sdf = SimpleDateFormat("yyyyMMdd hh:mm:ss", Locale.KOREA);
         val calendar = view.findViewById<JCalendarView>(R.id.calendar)
         val adapter = SampleAdapter()
-        calendar.adapter = adapter
 
-        adapter.monthChangeListener = object: MonthChangeListener {
+        calendar.setAdapter(adapter)
+        adapter.setMonthChangeListener(object: MonthChangeListener {
             override fun monthChanged(focusDate: Date) {
                 tv_date.text = sdf.format(focusDate)
             }
-        }
+        })
         adapter.getDate().let { tv_date.text = sdf.format(it) }
         btn_left.setOnClickListener {
             adapter.beforeMonth()

@@ -17,7 +17,7 @@ allprojects {
 
 ```Gradle
 dependencies {
-    implementation 'com.github.GGJJack:JCalendar:1.0.2'
+    implementation 'com.github.GGJJack:JCalendar:1.0.3'
 }
 ```
 
@@ -70,6 +70,9 @@ abstract class JCalendarViewHolder(private val _rootView: View) {
 ### Code
 
 ```kotlin
+// Start
+calendar.setAdapter(adapter)
+
 // Move Month
 adapter.setYearAndMonth(2020, 1) // Move to target year and month
 adapter.setYear(2020) // Move to target year
@@ -107,9 +110,9 @@ interface MonthChangeListener {
     fun monthChanged(focusDate: Date)
 }
 
-adapter.monthChangeListener = object : MonthChangeListener {
+adapter.setMonthChangeListener(object: MonthChangeListener {
     override fun monthChanged(focusDate: Date) {
         TODO("Not yet implemented")
     }
-}
+})
 ```
