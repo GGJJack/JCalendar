@@ -18,20 +18,12 @@ class JCalendarView : ConstraintLayout {
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
-    private var _adapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>? = null
-    var adapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>?
-        get() = _adapter
-        set(value) {
-            adapterChanged(value)
-        }
+    private var adapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>? = null
     private var _fullHeight = 0
     private var _collapseHeight = 0
-    internal var animateDuration: Int = 300
-    private var isTurnOnAnimateMode = false
     private var headerHeight: Int? = null
     private var cellHeight: Int? = null
-    internal var collapseRatio: Float = 0.6f
-    internal var lineMap = HashMap<JCalendarLine, Paint?>()
+    private var lineMap = HashMap<JCalendarLine, Paint?>()
 
     init {
         inflateViews()
@@ -39,7 +31,7 @@ class JCalendarView : ConstraintLayout {
 
     private fun inflateViews() {
         this.removeAllViews()
-        this._adapter?.let { adapter ->
+        this.adapter?.let { adapter ->
             val layoutInflater = LayoutInflater.from(context)
             // (1(weekTitle) + 7(Week width)) * 6(height Month)
             for (week in 0 until adapter.maxGridHeight) {
@@ -85,7 +77,7 @@ class JCalendarView : ConstraintLayout {
                     JCalendarLine.HEADER_RIGHT -> viewCanvas.drawLine(width.toFloat() - strokeWidth, 0f, width.toFloat() - strokeWidth, headerViewHeight, value)
                     JCalendarLine.HEADER_BOTTOM -> viewCanvas.drawLine(0f, headerViewHeight - strokeWidth, width.toFloat(), headerViewHeight - strokeWidth, value)
                     JCalendarLine.HEADER_SPLIT -> {
-                        this._adapter?.let { adapter ->
+                        this.adapter?.let { adapter ->
                             for (day in 1 until adapter.maxGridWidth) {
                                 val newX = width.toFloat() / adapter.maxGridWidth.toFloat() * day.toFloat()
                                 viewCanvas.drawLine(newX, 0f, newX, headerViewHeight, value)
@@ -97,7 +89,7 @@ class JCalendarView : ConstraintLayout {
                     JCalendarLine.BODY_RIGHT -> viewCanvas.drawLine(width.toFloat() - strokeWidth, headerViewHeight, width.toFloat() - strokeWidth, height.toFloat(), value)
                     JCalendarLine.BODY_BOTTOM -> viewCanvas.drawLine(0f, height.toFloat() - strokeWidth, width.toFloat(), height.toFloat() - strokeWidth, value)
                     JCalendarLine.BODY_SPLIT_HORIZONTAL -> {
-                        this._adapter?.let { adapter ->
+                        this.adapter?.let { adapter ->
                             for (week in 1 until adapter.maxGridHeight) {
                                 val heightSize = (height.toFloat() - headerViewHeight) / (adapter.maxGridHeight - 1).toFloat()
                                 val newYStart = heightSize * (week - 1) + headerViewHeight
@@ -110,7 +102,7 @@ class JCalendarView : ConstraintLayout {
                         }
                     }
                     JCalendarLine.BODY_SPLIT_VERTICAL -> {
-                        this._adapter?.let { adapter ->
+                        this.adapter?.let { adapter ->
                             for (week in 1 until adapter.maxGridHeight - 1) {
                                 val heightSize = (height.toFloat() - headerViewHeight) / (adapter.maxGridHeight - 1).toFloat()
                                 val newY = heightSize * (week) + headerViewHeight
@@ -129,7 +121,7 @@ class JCalendarView : ConstraintLayout {
         }
         if (lineMap.containsKey(JCalendarLine.FOCUS_BODY)) {
             lineMap[JCalendarLine.FOCUS_BODY]?.let { value ->
-                this._adapter?.let { adapter ->
+                this.adapter?.let { adapter ->
                     adapter.lastFocusPosition?.let { lastPosition ->
                         val x = lastPosition.first
                         val y = lastPosition.second
@@ -155,7 +147,7 @@ class JCalendarView : ConstraintLayout {
     }
 
     fun refresh() {
-        _adapter?.notifyMonthChanged()
+        adapter?.notifyMonthChanged()
     }
 
     private fun adapterRefresh() {
@@ -179,7 +171,7 @@ class JCalendarView : ConstraintLayout {
     }
 
     private fun adapterChanged(newAdapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>?) {
-        this._adapter = newAdapter
+        this.adapter = newAdapter
         newAdapter?.refreshCallback = this::adapterRefresh
         newAdapter?.invalidCallback = this::invalidViews
         inflateViews()
@@ -187,7 +179,7 @@ class JCalendarView : ConstraintLayout {
 
     private fun magnetViews(x: Int, y: Int, viewHolder: JCalendarViewHolder, set: ConstraintSet) {
         val view = viewHolder.view
-        _adapter?.let { adapter ->
+        adapter?.let { adapter ->
             when (x) {
                 0 -> {
                     set.connect(view.id, ConstraintSet.LEFT, this.id, ConstraintSet.LEFT)
@@ -255,4 +247,10 @@ class JCalendarView : ConstraintLayout {
         if (cellHeight == null) cellHeight = adapter?.gridData?.get(1)?.get(0)?.view?.height
         return cellHeight
     }
+    
+    fun setAdapter(adapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>) {
+        this.adapter = adapter
+    }
+    
+    fun getAdapter(): JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>? = this.adapter
 }

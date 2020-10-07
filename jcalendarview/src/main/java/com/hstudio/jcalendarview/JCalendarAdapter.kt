@@ -8,20 +8,15 @@ import java.util.*
 abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHolder : JCalendarViewHolder> {
 
     private val startOfWeek: Int = Calendar.SUNDAY
-    internal var _targetDate: Date = Date()
-    internal var targetDate: Date
-        get() = _targetDate.clearTime()
-        set(value) {
-            _targetDate = value
-        }
+    private var targetDate: Date = Date()
     internal val maxGridHeight = 6 + 1
     internal val maxGridWidth = 7
     internal val gridData = Array(maxGridHeight) { Array<JCalendarViewHolder?>(maxGridWidth) { null } }
 
-    var monthChangeListener: MonthChangeListener? = null
-    internal var lastActiveViewHolder: JCalendarViewHolder? = null
+    private var monthChangeListener: MonthChangeListener? = null
+    private var lastActiveViewHolder: JCalendarViewHolder? = null
     internal var lastFocusPosition: Pair<Int, Int>? = null
-    internal var holderMaxHeight: Int? = null
+    private var holderMaxHeight: Int? = null
 
     abstract fun onCreateView(layoutInflater: LayoutInflater, parent: ViewGroup, viewType: Int): ViewHolder
 
@@ -265,7 +260,7 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
     internal var invalidCallback: (() -> Unit)? = null
 
     final fun setTargetDate(date: Date) {
-        this.targetDate = date
+        this.targetDate = date.clearTime()
         monthChangeListener?.monthChanged(this.targetDate)
     }
 
@@ -311,5 +306,9 @@ abstract class JCalendarAdapter<ViewHolder : JCalendarViewHolder, HeaderViewHold
         }
 
         return daysBetween
+    }
+
+    fun setMonthChangeListener(listener: MonthChangeListener) {
+        monthChangeListener = listener
     }
 }
