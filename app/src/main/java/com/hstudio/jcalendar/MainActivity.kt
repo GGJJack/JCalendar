@@ -9,7 +9,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         supportFragmentManager.beginTransaction()
-            .replace(R.id.ly_fragment, MainFragment())
+            .replace(R.id.ly_fragment, JavaFragment())
+            //.replace(R.id.ly_fragment, MainFragment())
             .commitAllowingStateLoss()
 //        val adapter = SampleAdapter()
 //        calendar.adapter = adapter

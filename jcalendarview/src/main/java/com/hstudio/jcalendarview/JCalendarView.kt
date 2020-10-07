@@ -172,8 +172,8 @@ class JCalendarView : ConstraintLayout {
 
     private fun adapterChanged(newAdapter: JCalendarAdapter<out JCalendarViewHolder, out JCalendarViewHolder>?) {
         this.adapter = newAdapter
-        newAdapter?.refreshCallback = this::adapterRefresh
-        newAdapter?.invalidCallback = this::invalidViews
+        newAdapter?.refreshCallback = { this.adapterRefresh() }
+        newAdapter?.invalidCallback = { this.invalidViews() }
         inflateViews()
     }
 
