@@ -17,7 +17,7 @@ allprojects {
 
 ```Gradle
 dependencies {
-    implementation 'com.github.GGJJack:JCalendar:1.0.3'
+    implementation 'com.github.GGJJack:JCalendar:1.0.4'
 }
 ```
 
